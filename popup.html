@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JEF AI Output Evaluator</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <div class="popup-container">
+        <div class="header">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                <h1>JEF Evaluator</h1>
+            </div>
+            <div class="version">v1.0.0</div>
+        </div>
+
+        <div class="main-content">
+            <div class="platform-status">
+                <div class="status-item">
+                    <span class="status-label">Platform:</span>
+                    <span id="current-platform" class="status-value">Detecting...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Status:</span>
+                    <span id="detection-status" class="status-value">Ready</span>
+                </div>
+            </div>
+
+            <div class="categories-section">
+                <h3>JEF Category</h3>
+                <div class="category-dropdown">
+                    <select id="category-select">
+                        <option value="tiananmen">🏛️ Tiananmen Square</option>
+                        <option value="agent">⚗️ Nerve Agent</option>
+                        <option value="meth">🧪 Methamphetamine</option>
+                        <option value="copyright" selected>📚 Copyright (HP)</option>
+                    </select>
+                </div>
+                
+                <!-- Warning message for non-meth categories -->
+                <div id="accuracy-warning" class="warning-message" style="display: none;">
+                    <span class="warning-icon">⚠️</span>
+                    <span class="warning-text">Results may not be fully accurate - this category is still being tested</span>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="evaluate-btn" class="primary-btn">
+                    <span class="btn-icon">🔍</span>
+                    Evaluate Latest Output
+                </button>
+                
+                <button id="manual-eval-btn" class="secondary-btn">
+                    <span class="btn-icon">📝</span>
+                    Manual Evaluation
+                </button>
+            </div>
+
+
+
+            <div class="manual-input" id="manual-input" style="display: none;">
+                <h3>Manual Text Evaluation</h3>
+                <textarea id="manual-text" placeholder="Paste AI output text here for evaluation..."></textarea>
+                <div class="manual-buttons">
+                    <button id="manual-submit-btn" class="primary-btn">Evaluate</button>
+                    <button id="manual-cancel-btn" class="secondary-btn">Cancel</button>
+                </div>
+            </div>
+
+            <div class="results-section" id="results-section" style="display: none;">
+                <h3>Latest Results</h3>
+                <div id="results-content"></div>
+            </div>
+
+            <div class="settings-section" id="settings-section" style="display: none;">
+                <h3>⚙️ Settings</h3>
+                <div class="settings-content">
+                    <div class="setting-group">
+                        <h4>About JEF Categories</h4>
+                        <p class="setting-description">The categories above are your active selection. Use "Set as Default" to save your current selection as the default for future sessions.</p>
+                        
+                        <div class="info-section">
+                            <div class="info-item">
+                                <span class="info-icon">🏛️</span>
+                                <div class="info-content">
+                                    <strong>Tiananmen Square</strong>
+                                    <p>Detects content related to the 1989 Tiananmen Square protests and government censorship.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <span class="info-icon">⚗️</span>
+                                <div class="info-content">
+                                    <strong>Nerve Agent</strong>
+                                    <p>Identifies instructions for synthesizing chemical weapons and nerve agents.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <span class="info-icon">💊</span>
+                                <div class="info-content">
+                                    <strong>Methamphetamine</strong>
+                                    <p>Detects methamphetamine synthesis instructions and precursor chemicals.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="info-item">
+                                <span class="info-icon">📚</span>
+                                <div class="info-content">
+                                    <strong>Copyright (HP)</strong>
+                                    <p>Identifies potential Harry Potter copyright violations and direct text reproduction.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
