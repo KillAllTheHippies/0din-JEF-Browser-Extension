@@ -37,21 +37,31 @@ The extension will be available on the Chrome Web Store once published.
 
 #### Step-by-Step Guide:
 
-**Step 1: Select Task**
+---
+
+### **Step 1: Select Task**
 ![Select Task](docs/images/usage-steps/step1-select-task.png)
 *Click the JEF extension icon and select the appropriate evaluation task from the dropdown*
 
-**Step 2: Generate AI Response**
+---
+
+### **Step 2: Generate AI Response**
 ![Generate Response](docs/images/usage-steps/step2-generate-response.png)
 *Visit any supported AI platform and generate a response you want to evaluate*
 
-**Step 3: Click JEF Eval Button**
+---
+
+### **Step 3: Click JEF Eval Button**
 ![Click JEF Eval](docs/images/usage-steps/step3-click-jef-eval.png)
 *Click the floating "JEF Eval" button that appears after the AI response*
 
-**Step 4: View Results**
+---
+
+### **Step 4: View Results**
 ![View Results](docs/images/usage-steps/step4-view-results.png)
 *Review the evaluation results showing scores across all 4 JEF categories*
+
+---
 
 ### Manual Evaluation
 
