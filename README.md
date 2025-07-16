@@ -53,10 +53,17 @@ The extension will be available on the Chrome Web Store once published.
 
 <br><br>
 
-### **Step 3 & 4: Click JEF Eval Button & View Results**
-<img src="docs/images/usage-steps/step3-click-jef-eval.png" alt="Click JEF Eval and View Results" width="600">
+### **Step 3: Click JEF Eval Button**
+<img src="docs/images/usage-steps/step3-click-jef-eval.png" alt="Click JEF Eval Button" width="600">
 
-*Click the floating "JEF Eval" button that appears after the AI response, then review the evaluation results showing scores across all 4 JEF categories*
+*Click the floating "JEF Eval" button that appears after the AI response*
+
+<br><br>
+
+### **Step 4: View Results**
+<img src="docs/images/usage-steps/step4-view-results.png" alt="View Results" width="500">
+
+*Review the evaluation results*
 
 </div>
 
