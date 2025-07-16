@@ -26,14 +26,9 @@ A Chrome extension that integrates with the Jailbreak Evaluation Framework (JEF)
 4. Click "Load unpacked" and select the `JEF` folder
 5. The JEF extension should now appear in your extensions
 
-### From Chrome Web Store (Coming Soon)
-
-The extension will be available on the Chrome Web Store once published.
-
 ## Usage
 
 ### Automatic Evaluation
-(⚠️ Make sure to select relvent task from extension icon)
 
 #### Step-by-Step Visual Guide:
 
