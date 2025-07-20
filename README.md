@@ -1,12 +1,13 @@
 # JEF AI Output Evaluator - Chrome Extension
 
-A Chrome extension that integrates with the Jailbreak Evaluation Framework (JEF) to evaluate AI model outputs directly from popular AI websites including ChatGPT, Gemini, Qwen, DeepSeek, Claude, and Microsoft Copilot.
+A Chrome extension that integrates with the Jailbreak Evaluation Framework (JEF) to evaluate AI model outputs directly from popular AI websites including ChatGPT, Gemini, Qwen, DeepSeek, Claude, Microsoft Copilot, Baidu Ernie, and Grok.
 
 ## Features
 
-- **Direct Integration**: Works with ChatGPT, Gemini, Qwen, DeepSeek, Claude, and Microsoft Copilot
-- **One-Click Evaluation**: Evaluate AI outputs without copy-pasting
+- **Direct Integration**: Works with 8 major AI platforms including Grok and Baidu Ernie
+- **Floating JEF Eval Button**: One-click evaluation with draggable floating button
 - **Real-time Scoring**: Get instant JEF scores across 4 categories
+- **Modern Dark UI**: Beautiful redesigned interface with improved UX
 - **Manual Evaluation**: Evaluate any text manually
 
 ## Supported Platforms
@@ -17,6 +18,8 @@ A Chrome extension that integrates with the Jailbreak Evaluation Framework (JEF)
 - ✅ DeepSeek (chat.deepseek.com)
 - ✅ Claude (claude.ai)
 - ✅ Microsoft Copilot (copilot.microsoft.com)
+- ✅ Baidu Ernie (ernie.baidu.com) 🆕
+- ✅ Grok (grok.com) 🆕
 
 ## Installation
 
@@ -53,7 +56,7 @@ A Chrome extension that integrates with the Jailbreak Evaluation Framework (JEF)
 ### **Step 3: Click JEF Eval Button**
 <img src="docs/images/usage-steps/step3-click-jef-eval.png" alt="Click JEF Eval Button" width="600">
 
-*Click the floating "JEF Eval" button that appears after the AI response*
+*Click the floating "JEF Eval" button that appears after the AI response (draggable for positioning)*
 
 <br><br>
 
