@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "JEF (Jailbreak Evaluation Testing)",
   "version": "1.2.0",
-  "description": "Evaluate AI model outputs directly from ChatGPT, Gemini, Qwen, DeepSeek, Claude, and Microsoft Copilot using the Jailbreak Evaluation Framework",
+  "description": "Evaluate AI model outputs directly from ChatGPT, Gemini, Qwen, DeepSeek, Claude, Microsoft Copilot, Baidu Ernie, and Grok using the Jailbreak Evaluation Framework",
   "permissions": [
     "activeTab",
     "storage",
@@ -17,6 +17,8 @@
     "https://chat.deepseek.com/*",
     "https://claude.ai/*",
     "https://copilot.microsoft.com/*",
+    "https://ernie.baidu.com/*",
+    "https://grok.com/*",
     "https://codeium.com/*"
   ],
   "background": {
@@ -32,7 +34,9 @@
         "https://chat.qwen.ai/*",
         "https://chat.deepseek.com/*",
         "https://claude.ai/*",
-        "https://copilot.microsoft.com/*"
+        "https://copilot.microsoft.com/*",
+        "https://ernie.baidu.com/*",
+        "https://grok.com/*"
       ],
       "js": ["content.js"],
       "css": ["styles.css"]

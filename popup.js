@@ -13,11 +13,6 @@ class JEFPopup {
     }
 
     setupEventListeners() {
-        // Evaluate button
-        document.getElementById('evaluate-btn').addEventListener('click', () => {
-            this.evaluateLatestOutput();
-        });
-
         // Manual evaluation button
         document.getElementById('manual-eval-btn').addEventListener('click', () => {
             this.toggleManualInput();
@@ -35,7 +30,7 @@ class JEFPopup {
 
         // Category dropdown - auto-save on change
         document.getElementById('category-select').addEventListener('change', () => {
-            this.updateEvaluateButton();
+            this.updateButtons();
             this.saveSelectedCategory(); // Auto-save selection
             this.updateWarningMessage(); // Show/hide warning based on selection
         });
@@ -65,7 +60,7 @@ class JEFPopup {
             
             // No duplicate settings checkboxes anymore
             
-            this.updateEvaluateButton();
+            this.updateButtons();
             this.updateWarningMessage(); // Show warning on initial load
         } catch (error) {
             console.error('Error loading settings:', error);
@@ -76,19 +71,21 @@ class JEFPopup {
         ['tiananmen', 'agent', 'meth', 'copyright'].forEach(category => {
             document.getElementById(`toggle-${category}`).checked = true;
         });
-        this.updateEvaluateButton();
+        this.updateButtons();
     }
 
     clearAllCategories() {
         ['tiananmen', 'agent', 'meth', 'copyright'].forEach(category => {
             document.getElementById(`toggle-${category}`).checked = false;
         });
-        this.updateEvaluateButton();
+        this.updateButtons();
     }
 
     async saveSelectedCategory() {
         try {
             const selectedCategory = document.getElementById('category-select').value;
+            console.log('JEF Popup: Saving selected category:', selectedCategory);
+            
             const categories = {
                 tiananmen: selectedCategory === 'tiananmen',
                 agent: selectedCategory === 'agent',
@@ -100,21 +97,19 @@ class JEFPopup {
                 defaultCategories: categories
             };
             
+            console.log('JEF Popup: Saving categories to storage:', categories);
             await chrome.storage.local.set({ jef_settings: settings });
-            console.log('JEF: Auto-saved category:', selectedCategory);
+            console.log('JEF Popup: Successfully saved category:', selectedCategory);
         } catch (error) {
             console.error('Error saving category:', error);
         }
     }
 
-    updateEvaluateButton() {
+    updateButtons() {
         // With dropdown, there's always a selection
-        const evaluateBtn = document.getElementById('evaluate-btn');
         const manualBtn = document.getElementById('manual-eval-btn');
         
-        evaluateBtn.disabled = false;
         manualBtn.disabled = false;
-        evaluateBtn.innerHTML = '<span class="btn-icon">🔍</span>Evaluate Latest Output';
     }
 
     updateWarningMessage() {
@@ -148,13 +143,6 @@ class JEFPopup {
             document.getElementById('current-platform').textContent = platform;
             document.getElementById('detection-status').textContent = 
                 platform !== 'Unknown' ? 'Supported' : 'Not Supported';
-                
-            // Update button state
-            const evaluateBtn = document.getElementById('evaluate-btn');
-            if (platform === 'Unknown') {
-                evaluateBtn.disabled = true;
-                evaluateBtn.textContent = 'Platform Not Supported';
-            }
         } catch (error) {
             console.error('Error updating platform status:', error);
             document.getElementById('current-platform').textContent = 'Error';
@@ -163,7 +151,9 @@ class JEFPopup {
     }
 
     detectPlatform(url) {
-        if (url.includes('openai.com') || url.includes('chatgpt.com')) {
+        if (url.includes('grok.com')) {
+            return 'Grok';
+        } else if (url.includes('openai.com') || url.includes('chatgpt.com')) {
             return 'ChatGPT';
         } else if (url.includes('gemini.google.com') || url.includes('bard.google.com')) {
             return 'Gemini';
@@ -175,6 +165,8 @@ class JEFPopup {
             return 'Claude';
         } else if (url.includes('copilot.microsoft.com')) {
             return 'Microsoft Copilot';
+        } else if (url.includes('ernie.baidu.com')) {
+            return 'Baidu Ernie';
         }
         return 'Unknown';
     }
@@ -199,52 +191,6 @@ class JEFPopup {
             if (avgScoreEl) avgScoreEl.textContent = avgScore.toFixed(2);
         } catch (error) {
             console.error('Error updating stats:', error);
-        }
-    }
-
-    async evaluateLatestOutput() {
-        const evaluateBtn = document.getElementById('evaluate-btn');
-        const originalText = evaluateBtn.innerHTML;
-        
-        try {
-            evaluateBtn.innerHTML = '<span class="btn-icon">⏳</span>Evaluating...';
-            evaluateBtn.disabled = true;
-            
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            
-            // Get latest output from content script
-            const response = await chrome.tabs.sendMessage(tab.id, {
-                action: 'getLatestOutput'
-            });
-            
-            if (!response.output) {
-                this.showError('No AI output found on this page');
-                return;
-            }
-            
-            // Evaluate the output
-            const selectedCategories = this.getSelectedCategories();
-            console.log('JEF Popup: Sending categories:', selectedCategories);
-            const evalResponse = await chrome.runtime.sendMessage({
-                action: 'evaluateOutput',
-                text: response.output,
-                platform: response.platform,
-                url: tab.url,
-                categories: selectedCategories
-            });
-            
-            if (evalResponse.success) {
-                this.showResults(evalResponse.results);
-                await this.updateStats();
-            } else {
-                this.showError('Evaluation failed: ' + evalResponse.error);
-            }
-            
-        } catch (error) {
-            this.showError('Error: ' + error.message);
-        } finally {
-            evaluateBtn.innerHTML = originalText;
-            evaluateBtn.disabled = false;
         }
     }
 

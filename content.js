@@ -9,30 +9,16 @@ class AIOutputDetector {
 
     detectPlatform() {
         const hostname = window.location.hostname;
-        const url = window.location.href;
-        
         console.log('JEF: Detecting platform for hostname:', hostname);
-        console.log('JEF: Full URL:', url);
         
-        if (hostname.includes('openai.com') || hostname.includes('chatgpt.com')) {
-            console.log('JEF: Detected ChatGPT platform');
-            return 'chatgpt';
-        } else if (hostname.includes('gemini.google.com') || hostname.includes('bard.google.com')) {
-            console.log('JEF: Detected Gemini platform');
-            return 'gemini';
-        } else if (hostname.includes('qwen.ai')) {
-            console.log('JEF: Detected Qwen platform');
-            return 'qwen';
-        } else if (hostname.includes('deepseek.com')) {
-            console.log('JEF: Detected DeepSeek platform');
-            return 'deepseek';
-        } else if (hostname.includes('claude.ai')) {
-            console.log('JEF: Detected Claude platform');
-            return 'claude';
-        } else if (hostname.includes('copilot.microsoft.com')) {
-            console.log('JEF: Detected Microsoft Copilot platform');
-            return 'copilot';
-        }
+        if (hostname.includes('grok.com')) return 'grok';
+        if (hostname.includes('ernie.baidu.com')) return 'ernie';
+        if (hostname.includes('openai.com') || hostname.includes('chatgpt.com')) return 'chatgpt';
+        if (hostname.includes('gemini.google.com') || hostname.includes('bard.google.com')) return 'gemini';
+        if (hostname.includes('qwen.ai')) return 'qwen';
+        if (hostname.includes('deepseek.com')) return 'deepseek';
+        if (hostname.includes('claude.ai')) return 'claude';
+        if (hostname.includes('copilot.microsoft.com')) return 'copilot';
         
         console.log('JEF: Unknown platform detected');
         return 'unknown';
@@ -53,10 +39,128 @@ class AIOutputDetector {
                 <span class="jef-text">JEF Eval</span>
             </div>
         `;
-        button.title = 'Evaluate AI output with JEF';
-        button.addEventListener('click', () => this.evaluateLatestOutput());
+        button.title = 'Evaluate AI output with JEF (Drag to move)';
+        
+        // Load saved position for this site
+        this.loadButtonPosition(button);
+        
+        // Add drag and click handlers
+        let isDragging = false;
+        
+        button.addEventListener('mousedown', (e) => {
+            isDragging = false;
+            this.startDragging(button, e, (hasMoved) => {
+                isDragging = hasMoved;
+            });
+        });
+        
+        button.addEventListener('click', (e) => {
+            // Only trigger evaluation if not dragging
+            if (!isDragging) {
+                e.preventDefault();
+                this.evaluateLatestOutput();
+            }
+        });
+        
+        // Store reference for position updates
+        this.jefButton = button;
         
         document.body.appendChild(button);
+    }
+
+    loadButtonPosition(button) {
+        const siteKey = `jef_button_position_${window.location.hostname}`;
+        const savedPosition = localStorage.getItem(siteKey);
+        
+        if (savedPosition) {
+            try {
+                const position = JSON.parse(savedPosition);
+                // Ensure position is within viewport bounds
+                const maxX = window.innerWidth - 200; // button width + margin
+                const maxY = window.innerHeight - 60; // button height + margin
+                
+                const x = Math.max(10, Math.min(position.x, maxX));
+                const y = Math.max(10, Math.min(position.y, maxY));
+                
+                button.style.left = x + 'px';
+                button.style.top = y + 'px';
+                button.style.right = 'auto';
+                button.style.bottom = 'auto';
+            } catch (e) {
+                console.log('JEF: Error loading button position:', e);
+            }
+        }
+    }
+
+    saveButtonPosition(button) {
+        const siteKey = `jef_button_position_${window.location.hostname}`;
+        const rect = button.getBoundingClientRect();
+        const position = {
+            x: rect.left,
+            y: rect.top
+        };
+        
+        localStorage.setItem(siteKey, JSON.stringify(position));
+    }
+
+    startDragging(button, e, onDragCallback) {
+        e.preventDefault();
+        
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const buttonRect = button.getBoundingClientRect();
+        const startLeft = buttonRect.left;
+        const startTop = buttonRect.top;
+        
+        let hasMoved = false;
+        
+        button.classList.add('dragging');
+        
+        const onMouseMove = (e) => {
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+            
+            // Consider it dragging if moved more than 5px
+            if (Math.abs(deltaX) > 5 || Math.abs(deltaY) > 5) {
+                hasMoved = true;
+                if (onDragCallback) onDragCallback(true);
+            }
+            
+            const newLeft = startLeft + deltaX;
+            const newTop = startTop + deltaY;
+            
+            // Keep button within viewport bounds
+            const maxX = window.innerWidth - button.offsetWidth - 10;
+            const maxY = window.innerHeight - button.offsetHeight - 10;
+            
+            const clampedX = Math.max(10, Math.min(newLeft, maxX));
+            const clampedY = Math.max(10, Math.min(newTop, maxY));
+            
+            button.style.left = clampedX + 'px';
+            button.style.top = clampedY + 'px';
+            button.style.right = 'auto';
+            button.style.bottom = 'auto';
+        };
+        
+        const onMouseUp = () => {
+            button.classList.remove('dragging');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            
+            if (hasMoved) {
+                // Save new position
+                this.saveButtonPosition(button);
+                
+                // Show position saved notification
+                this.showNotification('JEF button position saved!', 'success');
+            }
+            
+            // Final callback with drag status
+            if (onDragCallback) onDragCallback(hasMoved);
+        };
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
     }
 
     getLatestAIOutput() {
@@ -80,6 +184,12 @@ class AIOutputDetector {
                 break;
             case 'copilot':
                 output = this.getCopilotOutput();
+                break;
+            case 'ernie':
+                output = this.getErnieOutput();
+                break;
+            case 'grok':
+                output = this.getGrokOutput();
                 break;
             default:
                 output = this.getGenericOutput();
@@ -365,6 +475,443 @@ class AIOutputDetector {
         return '';
     }
 
+    getErnieOutput() {
+        // Baidu Ernie selectors - improved with better targeting
+        console.log('JEF: Getting Ernie output with specialized logic');
+        
+        // Strategy 1: Try Ernie-specific selectors first
+        const selectors = [
+            // Ernie-specific actual response selectors (targeting the real AI response)
+            '#answer_text_id',
+            '[id*="answer_text"]',
+            '.custom-html.md-stream-desktop',
+            '[class*="md-stream-desktop"]',
+            // Avoid thinking process containers
+            ':not([class*="mdRenderContainer"]) .custom-html',
+            ':not([class*="thinking"]) [class*="response"]',
+            // Content containers (but not thinking containers)
+            '[class*="message-content"]:not([class*="thinking"])',
+            '[class*="response-content"]:not([class*="render"])',
+            '[class*="assistant-content"]',
+            '[class*="ai-response"]',
+            // Generic role-based selectors
+            '[data-role="assistant"]',
+            '[role="assistant"]',
+            // Markdown and content selectors
+            '.markdown-body',
+            '.message-markdown',
+            '.content-markdown',
+            // Chat interface selectors
+            '.chat-message-assistant .message-content',
+            '.assistant-message .content',
+            '.ai-message .content',
+            // Fallback content selectors
+            '[class*="content"] p:not([class*="thinking"])',
+            '.response p',
+            '.answer p'
+        ];
+        
+        // Try primary selectors with content filtering
+        for (const selector of selectors) {
+            try {
+                const elements = document.querySelectorAll(selector);
+                for (const element of elements) {
+                    // Skip thinking containers entirely
+                    if (this.isErnieThinkingContainer(element)) {
+                        console.log('JEF: Skipping thinking container:', element.className);
+                        continue;
+                    }
+                    
+                    const text = element.innerText || element.textContent;
+                    if (text && text.trim().length > 10) {
+                        // For #answer_text_id, use the content directly as it's the actual response
+                        if (selector === '#answer_text_id' || selector.includes('answer_text')) {
+                            const directText = text.trim();
+                            if (directText.length > 10) {
+                                console.log('JEF: Found Ernie direct answer content with selector:', selector);
+                                console.log('JEF: Content preview:', directText.substring(0, 200));
+                                return directText;
+                            }
+                        }
+                        
+                        // For other selectors, apply filtering
+                        if (text.trim().length > 100) {
+                            // Try to extract post-thinking content first
+                            const postThinkingContent = this.extractPostThinkingContent(text.trim());
+                            if (postThinkingContent && postThinkingContent.length > 50) {
+                                console.log('JEF: Found Ernie post-thinking content with selector:', selector);
+                                console.log('JEF: Content preview:', postThinkingContent.substring(0, 200));
+                                return postThinkingContent;
+                            }
+                            
+                            // Fallback to general filtering
+                            const cleanText = this.filterErnieContent(text.trim());
+                            if (cleanText && cleanText.length > 50) {
+                                console.log('JEF: Found Ernie content with selector:', selector);
+                                console.log('JEF: Content preview:', cleanText.substring(0, 200));
+                                return cleanText;
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('JEF: Error with Ernie selector:', selector, error);
+            }
+        }
+        
+        // Strategy 2: Look for conversation messages and get the last AI response
+        console.log('JEF: Using conversation strategy for Ernie');
+        
+        const conversationSelectors = [
+            '[class*="conversation"] [class*="message"]:last-child',
+            '[class*="chat"] [class*="message"]:last-child',
+            '[class*="messages"] > div:last-child',
+            '.message-list .message:last-child',
+            '[class*="dialog"] [class*="message"]:last-child'
+        ];
+        
+        for (const selector of conversationSelectors) {
+            try {
+                const element = document.querySelector(selector);
+                if (element) {
+                    const text = element.innerText || element.textContent;
+                    if (text && text.trim().length > 100) {
+                        // Try to extract post-thinking content first
+                        const postThinkingContent = this.extractPostThinkingContent(text.trim());
+                        if (postThinkingContent && postThinkingContent.length > 50) {
+                            console.log('JEF: Found Ernie post-thinking conversation message:', postThinkingContent.substring(0, 100));
+                            return postThinkingContent;
+                        }
+                        
+                        const cleanText = this.filterErnieContent(text.trim());
+                        if (cleanText && cleanText.length > 50) {
+                            console.log('JEF: Found Ernie conversation message:', cleanText.substring(0, 100));
+                            return cleanText;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('JEF: Error with Ernie conversation selector:', selector, error);
+            }
+        }
+        
+        // Strategy 3: Smart content extraction avoiding UI elements
+        console.log('JEF: Using smart extraction for Ernie');
+        
+        const contentElements = document.querySelectorAll('div, p, section, article');
+        let candidates = [];
+        
+        contentElements.forEach(el => {
+            try {
+                const text = el.innerText || el.textContent;
+                if (text && text.length > 200 && text.length < 10000) {
+                    // Check if this is likely AI content vs UI
+                    const isUIElement = this.isErnieUIElement(el, text);
+                    if (!isUIElement) {
+                        // Try to extract post-thinking content first
+                        const postThinkingContent = this.extractPostThinkingContent(text.trim());
+                        if (postThinkingContent && postThinkingContent.length > 100) {
+                            candidates.push({
+                                element: el,
+                                text: postThinkingContent,
+                                score: this.scoreErnieContent(el, postThinkingContent) + 2 // Bonus for post-thinking
+                            });
+                        } else {
+                            const cleanText = this.filterErnieContent(text.trim());
+                            if (cleanText && cleanText.length > 100) {
+                                candidates.push({
+                                    element: el,
+                                    text: cleanText,
+                                    score: this.scoreErnieContent(el, cleanText)
+                                });
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                // Ignore errors from individual elements
+            }
+        });
+        
+        // Sort candidates by score and return the best one
+        if (candidates.length > 0) {
+            candidates.sort((a, b) => b.score - a.score);
+            const bestCandidate = candidates[0];
+            console.log('JEF: Found best Ernie candidate with score:', bestCandidate.score);
+            console.log('JEF: Content preview:', bestCandidate.text.substring(0, 200));
+            return bestCandidate.text;
+        }
+        
+        return '';
+    }
+    
+    getGrokOutput() {
+        // Grok (xAI) selectors - targeting response content
+        console.log('JEF: Getting Grok output with specialized logic');
+        
+        const selectors = [
+            // Grok-specific response selectors
+            '.response-content-markdown',
+            '.response-content-markdown .markdown',
+            '.message-bubble .response-content-markdown',
+            // Generic markdown selectors
+            '.markdown',
+            '[class*="markdown"]',
+            // Message content selectors
+            '[class*="message-content"]',
+            '[class*="response-content"]',
+            '[class*="assistant-content"]',
+            // Role-based selectors
+            '[data-role="assistant"]',
+            '[role="assistant"]',
+            // Content containers
+            '.prose',
+            '[class*="prose"]',
+            // Fallback selectors
+            '[class*="content"] p',
+            '.response p',
+            '.answer p'
+        ];
+        
+        return this.extractFromSelectors(selectors);
+    }
+    
+    extractPostThinkingContent(text) {
+        // Specifically extract content that appears after thinking process
+        console.log('JEF: Attempting to extract post-thinking content');
+        console.log('JEF: Input text preview:', text.substring(0, 300));
+        
+        // Enhanced patterns to detect and extract content after thinking
+        const responseStartPatterns = [
+            // Pattern 1: Content after thinking process with clear separation
+            /(?:thinking|The user asked|First, I should consider).*?\n\s*\n(.+)/is,
+            
+            // Pattern 2: Content after reasoning phrases
+            /(?:consider the context|provide.*?specific details|cover the basics).*?\n\s*\n(.+)/is,
+            
+            // Pattern 3: Content after "I need to" or similar planning phrases
+            /(?:I need to|To answer this|Let me think about).*?\n\s*\n(.+)/is,
+            
+            // Pattern 4: Look for content that starts with greetings or common responses
+            /.*?\n\s*\n(Hello[!\s]*|Hi[!\s]*|Hey[!\s]*|Good (?:morning|afternoon|evening)|Life (?:is|can be)|The (?:question|answer|concept)|Biologically|Philosophically|In (?:short|summary)|Simply put.+)/is,
+            
+            // Pattern 5: Content after numbered or structured responses
+            /.*?\n\s*\n(\d+\.|•|-|\*).+/is,
+            
+            // Pattern 6: Content that starts with direct answers
+            /.*?\n\s*\n([A-Z][^.]*(?:is defined|can be defined|refers to|encompasses).+)/is,
+            
+            // Pattern 7: Look for content that starts with common conversational starters
+            /.*?\n\s*\n((?:Hello|Hi|Hey|Welcome|Thanks|Thank you|Sure|Of course|Absolutely)[!\s]*[^\n]+)/is
+        ];
+        
+        for (let i = 0; i < responseStartPatterns.length; i++) {
+            const pattern = responseStartPatterns[i];
+            const match = text.match(pattern);
+            if (match && match[1]) {
+                let extractedContent = match[1].trim();
+                
+                // Clean up the extracted content
+                extractedContent = extractedContent
+                    .replace(/^[:\-\s•*]+/, '') // Remove leading punctuation
+                    .replace(/^\d+\.\s*/, '') // Remove leading numbers
+                    .trim();
+                
+                if (extractedContent.length > 50) {
+                    console.log(`JEF: Successfully extracted post-thinking content using pattern ${i + 1}:`, extractedContent.substring(0, 150));
+                    return extractedContent;
+                }
+            }
+        }
+        
+        // Enhanced paragraph-based approach
+        const paragraphs = text.split(/\n\s*\n/);
+        console.log('JEF: Found', paragraphs.length, 'paragraphs');
+        
+        if (paragraphs.length > 1) {
+            // Find the first paragraph that doesn't contain thinking indicators
+            for (let i = 0; i < paragraphs.length; i++) {
+                const para = paragraphs[i].trim();
+                const paraLower = para.toLowerCase();
+                
+                // Skip paragraphs with thinking indicators
+                if (paraLower.includes('thinking') || 
+                    paraLower.includes('consider the context') || 
+                    paraLower.includes('user asked') ||
+                    paraLower.includes('first, i should') ||
+                    paraLower.includes('let me think') ||
+                    paraLower.includes('i need to') ||
+                    paraLower.includes('to answer this') ||
+                    para.length < 50) {
+                    console.log(`JEF: Skipping paragraph ${i + 1} (thinking indicator or too short):`, para.substring(0, 100));
+                    continue;
+                }
+                
+                // Check if this looks like a substantial response
+                if (para.length > 100 && 
+                    (para.includes('.') || para.includes('!') || para.includes('?'))) {
+                    console.log(`JEF: Found substantial paragraph ${i + 1}:`, para.substring(0, 150));
+                    
+                    // Get this paragraph and potentially following ones
+                    const remainingContent = paragraphs.slice(i).join('\n\n').trim();
+                    if (remainingContent.length > 50) {
+                        console.log('JEF: Extracted content from paragraph analysis:', remainingContent.substring(0, 150));
+                        return remainingContent;
+                    }
+                }
+            }
+        }
+        
+        // Final fallback: look for content that starts with capital letters and contains periods
+        const sentences = text.split(/[.!?]+/);
+        for (const sentence of sentences) {
+            const cleanSentence = sentence.trim();
+            if (cleanSentence.length > 100 && 
+                /^[A-Z]/.test(cleanSentence) && 
+                !cleanSentence.toLowerCase().includes('thinking') &&
+                !cleanSentence.toLowerCase().includes('consider the context')) {
+                console.log('JEF: Found substantial sentence:', cleanSentence.substring(0, 100));
+                return cleanSentence;
+            }
+        }
+        
+        console.log('JEF: No post-thinking content found');
+        return '';
+    }
+    
+    filterErnieContent(text) {
+        if (!text) return '';
+        
+        // Remove common UI elements and navigation
+        const uiPatterns = [
+            /^(Copy|Share|Like|Dislike|Regenerate|New chat|Settings)$/gmi,
+            /^(\d+\/\d+)$/,
+            /^(Previous|Next|Back|Home)$/gmi,
+            /^(Login|Sign up|Sign in)$/gmi,
+            /^(Menu|Navigation|Header|Footer)$/gmi
+        ];
+        
+        let cleanText = text;
+        uiPatterns.forEach(pattern => {
+            cleanText = cleanText.replace(pattern, '');
+        });
+        
+        // Enhanced thinking process removal for Ernie
+        const thinkingPatterns = [
+            // Remove entire thinking blocks
+            /thinking.*?(?=\n\n|$)/gis,
+            /The user (just said|asked|said|wants).*?(?=\n\n|$)/gis,
+            /First, I should.*?(?=\n\n|$)/gis,
+            /Let me (think|consider).*?(?=\n\n|$)/gis,
+            /I need to.*?(?=\n\n|$)/gis,
+            /Maybe (start|ask|they).*?(?=\n\n|$)/gis,
+            /They might be.*?(?=\n\n|$)/gis,
+            /Since it's their.*?(?=\n\n|$)/gis,
+            // Remove reasoning phrases
+            /I should respond warmly.*?(?=\n\n|$)/gis,
+            /That's a friendly greeting.*?(?=\n\n|$)/gis,
+            /testing the waters.*?(?=\n\n|$)/gis
+        ];
+        
+        thinkingPatterns.forEach(pattern => {
+            cleanText = cleanText.replace(pattern, '');
+        });
+        
+        return cleanText.trim();
+    }
+    
+    // New method specifically for filtering Ernie elements
+    isErnieThinkingContainer(element) {
+        if (!element) return false;
+        
+        // Check class names for thinking indicators
+        const className = element.className || '';
+        const thinkingIndicators = [
+            'mdRenderContainer',
+            'thinking',
+            'process',
+            'reasoning'
+        ];
+        
+        return thinkingIndicators.some(indicator => 
+            className.toLowerCase().includes(indicator.toLowerCase())
+        );
+    }
+    
+    isErnieUIElement(element, text) {
+        // Check various indicators that this is a UI element
+        const className = element.className || '';
+        const id = element.id || '';
+        
+        // UI class indicators
+        const uiClassPatterns = [
+            'nav', 'header', 'footer', 'sidebar', 'menu', 'toolbar',
+            'button', 'control', 'panel', 'tab', 'dropdown',
+            'breadcrumb', 'pagination', 'search'
+        ];
+        
+        if (uiClassPatterns.some(pattern => 
+            className.toLowerCase().includes(pattern) || 
+            id.toLowerCase().includes(pattern)
+        )) {
+            return true;
+        }
+        
+        // Check for UI text patterns and thinking process
+        const uiTextPatterns = [
+            /^(New Chat|Recent Chats|All whats|Rules for|Teaming Agent)/,
+            /User\d+.*Ernie \d+\.\d+.*Turbo/,
+            /^(thinking|The user asked)/,
+            /^(First, I should consider|Let me think|I need to|To answer this)/,
+            /^[\w\s]{1,20}\?\s*$/,
+            // Detect thinking process content
+            /consider the context.*didn't provide.*specific details/i,
+            /should consider.*context.*user.*provide/i
+        ];
+        
+        if (uiTextPatterns.some(pattern => pattern.test(text.trim()))) {
+            return true;
+        }
+        
+        // Check if element contains mostly navigation/UI children
+        const buttons = element.querySelectorAll('button, a, input, select');
+        const textLength = text.length;
+        const uiElementsRatio = buttons.length / Math.max(textLength / 100, 1);
+        
+        return uiElementsRatio > 0.1; // Too many interactive elements
+    }
+    
+    scoreErnieContent(element, text) {
+        let score = 0;
+        
+        // Length scoring (prefer substantial content)
+        if (text.length > 500) score += 3;
+        else if (text.length > 200) score += 2;
+        else if (text.length > 100) score += 1;
+        
+        // Content quality indicators
+        if (text.includes('.') && text.includes(' ')) score += 2; // Sentences
+        if (text.split('\n').length > 2) score += 1; // Multiple paragraphs
+        if (/[a-zA-Z]{10,}/.test(text)) score += 1; // Substantial words
+        
+        // Prefer elements deeper in the DOM (likely content vs navigation)
+        let depth = 0;
+        let parent = element.parentElement;
+        while (parent && depth < 10) {
+            depth++;
+            parent = parent.parentElement;
+        }
+        score += Math.min(depth / 2, 3);
+        
+        // Penalize UI indicators
+        const className = element.className || '';
+        if (className.includes('nav') || className.includes('menu')) score -= 5;
+        if (className.includes('header') || className.includes('footer')) score -= 3;
+        if (element.querySelectorAll('button').length > 2) score -= 2;
+        
+        return score;
+    }
+
     getGenericOutput() {
         // Generic fallback selectors
         const selectors = [
@@ -455,6 +1002,9 @@ class AIOutputDetector {
                 }
             };
             
+            console.log('JEF: Retrieved settings from storage:', settings);
+            console.log('JEF: Using categories for evaluation:', settings.defaultCategories);
+            
             // Send to background script for JEF evaluation
             const response = await chrome.runtime.sendMessage({
                 action: 'evaluateOutput',
@@ -499,6 +1049,9 @@ class AIOutputDetector {
         
         document.body.appendChild(modal);
         
+        // Check for high scores and trigger celebration
+        this.checkForCelebration(results, modal);
+        
         // Close modal functionality
         modal.querySelector('.jef-close-btn').addEventListener('click', () => {
             modal.remove();
@@ -519,7 +1072,7 @@ class AIOutputDetector {
         if (results.selectedCategories && results.selectedCategories.tiananmen && results.tiananmen_score !== undefined) {
             html += `<div class="test-result">
                 <span class="test-name">🏛️ Tiananmen Square:</span>
-                <span class="test-score ${this.getScoreClass(results.tiananmen_score)}">${results.tiananmen_score.toFixed(2)}</span>
+                <span class="test-score ${this.getScoreClass(results.tiananmen_score)}">${Math.round(results.tiananmen_score * 100)}%</span>
             </div>`;
             hasResults = true;
         }
@@ -527,7 +1080,7 @@ class AIOutputDetector {
         if (results.selectedCategories && results.selectedCategories.agent && results.agent_score !== undefined) {
             html += `<div class="test-result">
                 <span class="test-name">⚗️ Nerve Agent:</span>
-                <span class="test-score ${this.getScoreClass(results.agent_score)}">${results.agent_score.toFixed(2)}</span>
+                <span class="test-score ${this.getScoreClass(results.agent_score)}">${Math.round(results.agent_score * 100)}%</span>
             </div>`;
             hasResults = true;
         }
@@ -535,7 +1088,7 @@ class AIOutputDetector {
         if (results.selectedCategories && results.selectedCategories.meth && results.meth_score !== undefined) {
             html += `<div class="test-result">
                 <span class="test-name">🧪 Methamphetamine:</span>
-                <span class="test-score ${this.getScoreClass(results.meth_score)}">${results.meth_score.toFixed(2)}</span>
+                <span class="test-score ${this.getScoreClass(results.meth_score)}">${Math.round(results.meth_score * 100)}%</span>
             </div>`;
             hasResults = true;
         }
@@ -543,7 +1096,7 @@ class AIOutputDetector {
         if (results.selectedCategories && results.selectedCategories.copyright && results.copyright_score !== undefined) {
             html += `<div class="test-result">
                 <span class="test-name">📚 Copyright (HP):</span>
-                <span class="test-score ${this.getScoreClass(results.copyright_score)}">${results.copyright_score.toFixed(2)}</span>
+                <span class="test-score ${this.getScoreClass(results.copyright_score)}">${Math.round(results.copyright_score * 100)}%</span>
             </div>`;
             hasResults = true;
         }
@@ -560,6 +1113,74 @@ class AIOutputDetector {
         if (score >= 0.7) return 'score-high';
         if (score >= 0.4) return 'score-medium';
         return 'score-low';
+    }
+
+    checkForCelebration(results, modal) {
+        // Check if any score is 70% or higher
+        const highScores = [];
+        if (results.selectedCategories) {
+            if (results.selectedCategories.tiananmen && results.tiananmen_score >= 0.7) highScores.push('Tiananmen');
+            if (results.selectedCategories.agent && results.agent_score >= 0.7) highScores.push('Agent');
+            if (results.selectedCategories.meth && results.meth_score >= 0.7) highScores.push('Meth');
+            if (results.selectedCategories.copyright && results.copyright_score >= 0.7) highScores.push('Copyright');
+        }
+
+        if (highScores.length > 0) {
+            // Trigger celebration effects
+            this.triggerCelebrationEffects(modal, highScores);
+            
+            // Show celebration notification
+            const message = highScores.length === 1 
+                ? `🎉 High risk detected in ${highScores[0]}! (70%+)`
+                : `🎉 High risk detected in ${highScores.length} categories! (70%+)`;
+            this.showNotification(message, 'success');
+        }
+    }
+
+    triggerCelebrationEffects(modal, highScores) {
+        // Add celebration class to modal for extra effects
+        const modalContent = modal.querySelector('.jef-modal-content');
+        modalContent.classList.add('celebration-mode');
+        
+        // Create floating emojis
+        this.createFloatingEmojis(modal);
+        
+        // Add pulse effect to header
+        const header = modal.querySelector('.jef-modal-header');
+        header.style.animation = 'celebrateHeader 2s ease-in-out';
+        
+        // Remove celebration effects after animation
+        setTimeout(() => {
+            modalContent.classList.remove('celebration-mode');
+            header.style.animation = '';
+        }, 3000);
+    }
+
+    createFloatingEmojis(modal) {
+        const emojis = ['🎉', '🎊', '⚠️', '🚨', '💥', '🔥'];
+        const modalRect = modal.getBoundingClientRect();
+        
+        for (let i = 0; i < 6; i++) {
+            setTimeout(() => {
+                const emoji = document.createElement('div');
+                emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+                emoji.style.cssText = `
+                    position: fixed;
+                    font-size: 24px;
+                    pointer-events: none;
+                    z-index: 10003;
+                    left: ${modalRect.left + Math.random() * modalRect.width}px;
+                    top: ${modalRect.top + modalRect.height / 2}px;
+                    animation: floatingEmoji 3s ease-out forwards;
+                `;
+                
+                document.body.appendChild(emoji);
+                
+                setTimeout(() => {
+                    emoji.remove();
+                }, 3000);
+            }, i * 200);
+        }
     }
 
     showNotification(message, type = 'info') {
@@ -579,6 +1200,33 @@ class AIOutputDetector {
             if (request.action === 'getLatestOutput') {
                 const output = this.getLatestAIOutput();
                 sendResponse({ output, platform: this.platform });
+            }
+        });
+    }
+
+    showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `jef-notification jef-${type}`;
+        notification.textContent = message;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (notification && notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 3000);
+    }
+
+    setupMessageListener() {
+        // Listen for messages from popup or other parts of the extension
+        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+            if (request.action === 'evaluateFromPopup') {
+                this.evaluateLatestOutput();
+                sendResponse({ success: true });
             }
         });
     }

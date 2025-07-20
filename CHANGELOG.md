@@ -1,5 +1,42 @@
 # JEF Browser Extension - Changelog
 
+## [1.3.0] - 2025-01-20
+
+### 🎉 Major Platform Additions
+- **Added Grok Support** (grok.com)
+  - Full AI response detection and extraction
+  - Platform-specific selectors for Grok's interface
+  - Integrated with JEF evaluation framework
+
+- **Added Baidu Ernie Support** (ernie.baidu.com)
+  - Advanced content extraction with thinking process filtering
+  - Smart container detection to avoid UI elements
+  - Multi-strategy extraction with robust fallback mechanisms
+
+### ✨ UI/UX Improvements
+- **Floating JEF Eval Button**: Draggable evaluation button on AI platforms
+- **Modern Dark UI**: Beautiful redesigned warning messages and notifications
+- **Streamlined Popup**: Removed redundant "Evaluate Latest Output" button
+- **Enhanced Category Selection**: Improved dropdown with auto-save functionality
+
+### 🔧 Technical Enhancements
+- **Fixed Category Selection Bug**: Categories now properly save and load
+- **Added Missing Methods**: Fixed showNotification and setupMessageListener
+- **Improved Error Handling**: Better debugging and console logging
+- **Code Cleanup**: Removed dead code and fixed broken references
+
+### 📋 Platform Support (8 Total)
+- ✅ ChatGPT (chat.openai.com, chatgpt.com)
+- ✅ Google Gemini (gemini.google.com)
+- ✅ Qwen (chat.qwen.ai)
+- ✅ DeepSeek (chat.deepseek.com)
+- ✅ Claude (claude.ai)
+- ✅ Microsoft Copilot (copilot.microsoft.com)
+- ✅ Baidu Ernie (ernie.baidu.com) 🆕
+- ✅ Grok (grok.com) 🆕
+
+---
+
 ## [1.2.0] - 2025-01-18
 
 ### 🎉 Major Platform Additions
